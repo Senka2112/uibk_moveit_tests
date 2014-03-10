@@ -1,29 +1,37 @@
 /*
- * test_poses.cpp
+ * test_poses_rpy.cpp
  *
- *  Created on: Feb 19, 2014
+ *  Created on: March 10, 2014
  *      Author: Martin Griesser
  */
+
+
+
 
 #include "ros/ros.h"
 #include "iostream"
 #include "fstream"
 
-#include <moveit/move_group_interface/move_group.h>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 
+#include <moveit/move_group_interface/move_group.h>
 
 #define PLAN_ATTEMPTS 3
 #define MAX_PLAN_TIME 20
 
-
-
 using namespace ros;
 using namespace std;
+
+/* 
+ * Load test poses from a file. Provide one pose per line
+ * in the format: x y z roll pitch yaw
+ */
 
 /**
  * Loads the pose data from file with given name into given vector.
  */
-bool load_test_poses(const char *fn, vector<geometry_msgs::Pose> &test_poses) {
+bool load_test_poses(const char *fn, vector<Eigen::Affine3d> &test_poses) {
 
 	ROS_INFO("Opening input file '%s'", fn);
 
@@ -35,13 +43,23 @@ bool load_test_poses(const char *fn, vector<geometry_msgs::Pose> &test_poses) {
 
 	string line;
 	while(getline(input_file, line)) {
-		geometry_msgs::Pose p;
+
+		double x,y,z,roll,pitch,yaw;
+
 		stringstream ss(line);
 
-		ss >> p.position.x >> p.position.y >> p.position.z;
-		ss >> p.orientation.x >> p.orientation.y >> p.orientation.z >> p.orientation.w;
+		ss >> x >> y >> z;
+		ss >> roll >> pitch >> yaw;
 
-		test_poses.push_back(p);
+		Eigen::Affine3d pose;
+
+		pose = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
+			   Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+			   Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+
+		pose.translation() = Eigen::Vector3d(x, y, z);
+
+		test_poses.push_back(pose);
 	}
 
 	input_file.close();
@@ -50,11 +68,11 @@ bool load_test_poses(const char *fn, vector<geometry_msgs::Pose> &test_poses) {
 	return true;
 }
 
-void run_tests(move_group_interface::MoveGroup &move_group, vector<geometry_msgs::Pose> &poses) {
+void run_tests(move_group_interface::MoveGroup &move_group, vector<Eigen::Affine3d> &poses) {
 	ROS_INFO("Received %d test poses. Starting tests.", (int)poses.size());
 
 	for(size_t i = 0; i < poses.size(); ++i) {
-		geometry_msgs::Pose &pose = poses[i];
+		Eigen::Affine3d &pose = poses[i];
 		int attempts = 1;
 		ROS_INFO("Trying to reach test pose %d", (int)i + 1);
 
@@ -107,7 +125,7 @@ int main(int argc, char **argv) {
 	}
 
 	// load test poses from given input file
-	vector<geometry_msgs::Pose> test_poses;
+	vector<Eigen::Affine3d> test_poses;
 	if(!load_test_poses(argv[1], test_poses)) {
 		ROS_ERROR("Unable to load test poses from file '%s'", argv[1]);
 		return EXIT_FAILURE;
@@ -142,6 +160,8 @@ int main(int argc, char **argv) {
 	if(argc > 3) {
 		planner_id = argv[3];
 		ROS_INFO("Using planner '%s'", planner_id.c_str());
+	} else {
+		ROS_INFO("No planner id provided. Using '%s' as default.", planner_id.c_str());
 	}
 
 	// Create MoveGroup for one of the planning groups
