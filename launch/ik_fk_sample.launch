@@ -1,0 +1,10 @@
+<launch>
+
+  <include file="$(find uibk_robot)/launch/upload.launch">
+  	<arg name="file_name" value="uibk_robot_object_setup.xacro"/>
+  </include>
+  <param name="robot_description_semantic" textfile="$(find uibk_robot_moveit_config)/config/uibk_robot.srdf" />
+  
+  <rosparam command="load" file="$(find uibk_robot_moveit_config)/config/kinematics.yaml"/> 
+
+</launch>
