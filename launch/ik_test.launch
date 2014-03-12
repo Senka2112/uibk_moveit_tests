@@ -3,10 +3,10 @@
   <include file="$(find uibk_robot)/launch/upload.launch"/>
   <param name="robot_description_semantic" textfile="$(find uibk_moveit_config)/config/uibk_robot.srdf" />
   
-  <rosparam command="load" file="$(find uibk_moveit_config)/config/kinematics.yaml"/> 
+  <rosparam command="load" file="$(find uibk_robot_moveit_config)/config/kinematics.yaml"/> 
   
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" ></node>
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find uibk_moveit_tests)/launch/ik_test.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find uibk_robot_moveit_tests)/launch/ik_test.rviz" />
   
 </launch>
