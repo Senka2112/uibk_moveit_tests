@@ -44,16 +44,15 @@ int main(int argc, char **argv) {
 	robot_state::RobotState state(model);
 	state.setToDefaultValues();
 	// connect to ik group
-	robot_state::JointStateGroup *jnt_state_group = state.getJointStateGroup("right_arm");
-	if(jnt_state_group == NULL) {
+	const robot_state::JointModelGroup *jnt_model_group = state.getJointModelGroup("right_arm");
+
+	if(jnt_model_group == NULL) {
 		ROS_ERROR("Unknown IK-Group '%s'", "right_arm");
 		return EXIT_FAILURE;
 	}
 
-	kinematics::KinematicsQueryOptions options;
-	// these are the default settings...
-	options.lock_redundant_joints = false;
-	options.return_approximate_solution = false;
+	const vector<string> &joint_names = jnt_model_group->getJointModelNames();
+
 	// create a test pose for IK calculation
 	geometry_msgs::Pose test_pose;
 
@@ -69,26 +68,26 @@ int main(int argc, char **argv) {
 	ROS_INFO("IK calculation");
 
 	// compute IK result
-	if(jnt_state_group->setFromIK(test_pose, IK_ATTEMPTS, IK_TIMEOUT, options)) {
-		vector<double> joint_values;
-		// store joint positions for later visualitation.
-		jnt_state_group->getVariableValues(joint_values);
+	if(state.setFromIK(jnt_model_group, test_pose, IK_ATTEMPTS, IK_TIMEOUT)) {
 
 		ROS_INFO("IK calculation successful");
-		ROS_INFO("Values: ");
 
-		for(std::size_t i = 0; i < joint_values.size(); ++i) {
-			cout << joint_values[i] << " ";
+		// store joint positions for later visualitation.
+		vector<double> joint_values;
+		state.copyJointGroupPositions(jnt_model_group, joint_values);
+
+		for (std::size_t i = 0; i < joint_names.size(); ++i) {
+			ROS_INFO("Joint %s: %f", joint_names[i].c_str(), joint_values[i]);
 		}
-		cout << endl;
 
 	} else {
 		ROS_DEBUG("IK calculation failed");
 	}
 
 	// set robot state to random position
-	state.setToRandomValues();
-	Eigen::Affine3d end_effector_state = state.getLinkState("right_arm_7_link")->getGlobalLinkTransform();
+	state.setToRandomPositions(jnt_model_group);
+	const Eigen::Affine3d &end_effector_state = state.getGlobalLinkTransform("right_arm_7_link");
+
 	/* Print end-effector pose. Remember that this is in the model frame */
 	ROS_INFO_STREAM("Translation: " << end_effector_state.translation());
 	ROS_INFO_STREAM("Rotation: " << end_effector_state.rotation());

@@ -70,11 +70,12 @@ void visualizeResults(RobotModelPtr model, const string &ik_group, vector<TestRe
 	robot_state::RobotState state(model);
 	state.setToDefaultValues();
 	// connect to ik group
-	robot_state::JointStateGroup *jnt_state_group = state.getJointStateGroup(ik_group);
+	const robot_model::JointModelGroup *jnt_model_group = state.getJointModelGroup(ik_group);
+
 	// publish all successful calculated solutions
 	for(size_t i = 0; i < results.size(); ++i) {
 		if(results[i].success) {
-			jnt_state_group->setVariableValues(results[i].values);
+			state.setJointGroupPositions(jnt_model_group, results[i].values);
 			publishRobotState(state);
 		}
 	}
@@ -123,16 +124,11 @@ void worker(RobotModelPtr model,
 	robot_state::RobotState state(model);
 	state.setToDefaultValues();
 	// connect to ik group
-	robot_state::JointStateGroup *jnt_state_group = state.getJointStateGroup(ik_group);
-	if(jnt_state_group == NULL) {
+	const robot_model::JointModelGroup *jnt_model_group = state.getJointModelGroup(ik_group);
+	if(jnt_model_group == NULL) {
 		ROS_ERROR("Unknown IK-Group '%s'", ik_group.c_str());
 		return;
 	}
-
-	kinematics::KinematicsQueryOptions options;
-	// these are the default settings...
-	options.lock_redundant_joints = false;
-	options.return_approximate_solution = false;
 
 	ROS_INFO("Starting computation...");
 	for(int i = start_index; i < start_index + n; ++i) {
@@ -140,13 +136,13 @@ void worker(RobotModelPtr model,
 
 		// reset state in each iteration
 		// comment out if you want to take previous result as seed state
-		jnt_state_group->setToDefaultValues();
+		state.setToDefaultValues();
 
 		// compute result
-		if(jnt_state_group->setFromIK(test_poses[i], IK_ATTEMPTS, IK_TIMEOUT, options)) {
+		if(state.setFromIK(jnt_model_group, test_poses[i], IK_ATTEMPTS, IK_TIMEOUT)) {
 			results[i].success = true;
 			// store joint positions for later visualitation.
-			jnt_state_group->getVariableValues(results[i].values);
+			state.copyJointGroupPositions(jnt_model_group, results[i].values);
 			ROS_DEBUG("Result %d: successful", i);
 		} else {
 			ROS_DEBUG("Result %d: failed", i);
