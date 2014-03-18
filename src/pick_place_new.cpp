@@ -7,7 +7,7 @@
 
 #include <ros/ros.h>
 
-#include <moveit/move_group_interface/move_group.h>
+#include <plan_execution.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 #include <moveit_msgs/Grasp.h>
@@ -43,7 +43,7 @@ class PickPlace {
 public:
 	// our interface with MoveIt
 	boost::shared_ptr<PlanningSceneInterface> planning_scene_interface_;
-	boost::shared_ptr<MoveGroup> move_group_;
+	boost::shared_ptr<PlanExecution> plan_execution_;
 
 	geometry_msgs::Pose start_pose_;
 	geometry_msgs::Pose goal_pose_;
@@ -53,14 +53,8 @@ public:
 	PickPlace(ros::NodeHandle &nh, const string &planner_id) {
 
 		// Create MoveGroup for one of the planning groups
-		move_group_.reset(new MoveGroup("right_arm"));
-		move_group_->setPlanningTime(5.0);
-		ROS_INFO("Using planner '%s'", planner_id.c_str());
-
-		move_group_->setPlannerId(planner_id);
-		move_group_->setNumPlanningAttempts(5);
-
 		planning_scene_interface_.reset(new PlanningSceneInterface());
+		plan_execution_.reset(new PlanExecution("right"));
 
 		pub_attach_coll_obj_ = nh.advertise<AttachedCollisionObject>("attached_collision_object", 10);
 
@@ -80,9 +74,6 @@ public:
 		// create obstacle and object to move...
 		createEnvironment();
 
-		// remember start position
-		move_group_->rememberJointValues("defaultPosition");
-
 		bool found = false;
 		while (!found && ros::ok()) {
 
@@ -95,29 +86,21 @@ public:
 			}
 		}
 
-		ROS_INFO_STREAM_NAMED("simple_pick_place", "Waiting to put...");
-		ros::Duration(0.5).sleep();
-
-		bool placed = false;
-		while (!placed && ros::ok()) {
-			if (!place(goal_pose_, OBJ_ID)) {
-				ROS_ERROR_STREAM_NAMED("pick_place", "Place failed.");
-			} else {
-				ROS_INFO_STREAM_NAMED("pick_place", "Done with place");
-				placed = true;
-			}
-		}
-
-		// Move to neutral position
-		// move_to_neutral_position();
+//		ROS_INFO_STREAM_NAMED("simple_pick_place", "Waiting to put...");
+//		ros::Duration(0.5).sleep();
+//
+//		bool placed = false;
+//		while (!placed && ros::ok()) {
+//			if (!place(goal_pose_, OBJ_ID)) {
+//				ROS_ERROR_STREAM_NAMED("pick_place", "Place failed.");
+//			} else {
+//				ROS_INFO_STREAM_NAMED("pick_place", "Done with place");
+//				placed = true;
+//			}
+//		}
 
 		ROS_INFO_STREAM_NAMED("uibk_pick_place", "Pick and place cycle complete");
-		ROS_INFO_STREAM_NAMED("pick_place", "Returning to start position");
 
-		move_group_->setNamedTarget("defaultPosition");
-		while(!move_group_->move()) {
-
-		}
 		ros::Duration(2.0).sleep();
 
 		return true;
@@ -311,10 +294,7 @@ public:
 		// Pick grasp
 		generateGrasps(start_pose_, grasps);
 
-		// Prevent collision with table
-		move_group_->setSupportSurfaceName(SUPPORT_SURFACE_NAME);
-
-		return move_group_->pick(name, grasps);
+		return plan_execution_->plan_pick(name, grasps);
 	}
 
 	bool place(const geometry_msgs::Pose& goal_pose, std::string name) {
@@ -373,9 +353,6 @@ public:
 			place_locations.push_back(place_loc);
 		}
 
-		// Prevent collision with table
-		move_group_->setSupportSurfaceName(SUPPORT_SURFACE_NAME);
-
 		moveit_msgs::OrientationConstraint oc;
 		oc.header.frame_id = BASE_LINK;
 		oc.link_name = EE_PARENT_LINK;
@@ -394,10 +371,7 @@ public:
 		moveit_msgs::Constraints constraints;
 		constraints.orientation_constraints.push_back(oc);
 
-		// move_group_->setPathConstraints(constraints);
-		move_group_->setPlannerId("RRTConnectkConfigDefault");
-
-		return move_group_->place(name, place_locations);
+		return plan_execution_->plan_place(name, place_locations);
 	}
 
 	bool generateGrasps(geometry_msgs::Pose &pose, vector<Grasp>& grasps) {
@@ -524,44 +498,6 @@ public:
 
 		return true;
 	}
-
-//	bool move_to_neutral_position() {
-//
-//		ROS_INFO_STREAM_NAMED("uibk_pick_place",
-//				"Moving arm into neutral position =============================== \n");
-//		double jnt_values[] = { 0, 0, 0, 0, 0, 0, 0 };
-//		vector<double> values;
-//		values.insert(values.begin(), jnt_values, jnt_values + 7);
-//		bool target_reached = false;
-//
-//		while (!target_reached) {
-//			ROS_INFO_NAMED("uibk_pick_place", "Trying to execute motion...");
-//			move_group_->setJointValueTarget(values);
-//			target_reached = move_group_->move();
-//		}
-//
-//		return true;
-//	}
-
-//	bool promptUser() {
-//		// Make sure ROS is still with us
-//		if (!ros::ok())
-//			return false;
-//
-//		if (auto_reset_) {
-//			ROS_INFO_STREAM_NAMED("pick_place",
-//					"Auto-retrying in " << auto_reset_sec_ << " seconds");
-//			ros::Duration(auto_reset_sec_).sleep();
-//		} else {
-//			ROS_INFO_STREAM_NAMED("pick_place", "Retry? (y/n)");
-//			char input; // used for prompting yes/no
-//			cin >> input;
-//			if (input == 'n')
-//				return false;
-//		}
-//		return true;
-//	}
-
 }
 ;
 

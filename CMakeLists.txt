@@ -33,5 +33,8 @@ rosbuild_add_executable(compute_test_poses src/compute_test_poses.cpp)
 rosbuild_add_executable(visualize_ik_test_results src/visualize_ik_test_results.cpp)
 rosbuild_add_executable(ik_fk_sample src/ik_fk_sample.cpp)
 rosbuild_add_executable(pick_place src/pick_place.cpp)
+rosbuild_add_executable(pick_place_new 
+	src/pick_place_new.cpp
+	src/plan_execution.cpp)
 #rosbuild_add_executable(test_poses src/test_poses.cpp)
 #rosbuild_add_executable(test_poses_rpy src/test_poses_rpy.cpp)
