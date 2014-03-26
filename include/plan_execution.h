@@ -21,85 +21,103 @@
 #include <boost/shared_ptr.hpp>
 
 #include <actionlib/client/simple_action_client.h>
+#include <moveit/move_group_interface/move_group.h>
+
+#include <moveit_msgs/ExecuteKnownTrajectory.h>
 #include <moveit_msgs/PickupAction.h>
 #include <moveit_msgs/PlaceAction.h>
+#include <moveit_msgs/MoveGroupAction.h>
 #include <moveit_msgs/Grasp.h>
 
 
-#define CAN_LOOK false;
-#define ALLOW_REPLAN false;
+#define CAN_LOOK false
+#define ALLOW_REPLAN false
 #define SUPPORT_SURFACE "table_surface_link"
+#define FRAME_ID "world_link"
 
 
 using namespace std;
+using namespace moveit_msgs;
+
+
+
+struct PlanningResult {
+	int type;
+	int status;
+	string status_msg;
+	string object_id;
+	RobotState start_state;
+	vector<RobotTrajectory> trajectory_stages;
+	vector<string> trajectory_descriptions;
+};
+
+typedef boost::shared_ptr<PlanningResult> PlanningResultPtr;
+
 
 
 class PlanExecution {
 
 public:
 
+	static const int SUCCESS = 1;
+	static const int FAILURE = 0;
+
+	static const int PICK = 0;
+	static const int PLACE = 1;
+	static const int GOAL = 2;
+
 	PlanExecution(const string &arm);
 	virtual ~PlanExecution() {}
 
-	bool plan_pick(const std::string &object, const std::vector<moveit_msgs::Grasp> &grasps);
-	bool plan_place(const std::string &object, const std::vector<moveit_msgs::PlaceLocation> &locations);
+	PlanningResultPtr plan_pick(const string &object, const vector<Grasp> &grasps);
+	PlanningResultPtr plan_place(const string &object, const vector<PlaceLocation> &locations);
+	PlanningResultPtr plan(const geometry_msgs::Pose &pose_goal);
+
+	bool execute(const PlanningResultPtr &plan);
+
+	void setPlanningGroupName(const string &name);
+	string getPlanningGroupName();
+
+	void setPlannerId(const string &planner_id);
+	string getPlannerId();
+
+	void setAllowedPlanningTime(double value);
+	double getAllowedPlanningTime();
+
+	void setPlanningAttempts(int value);
+	int getPlanningAttempts();
+
+	void setSupportSurfaceName(const string name);
+	string getSupportSurfaceName();
 
 private:
 
+	bool execute(const RobotTrajectory &trajectory);
+	bool attachObject(const string &object);
+	bool detachObject(const string &object);
+
 	string group_name_;
 	string end_effector_;
+	string end_effector_link_;
 	double planning_time_;
+	int planning_attempts_;
+	double goal_joint_tolerance_;
+	double goal_position_tolerance_;
+	double goal_orientation_tolerance_;
 	string planner_id_;
 	string support_surface_;
 
 	ros::NodeHandle node_handle_;
 
-	moveit_msgs::PickupResult pick_action_result_;
-	moveit_msgs::PlaceResult place_action_result_;
+	ros::ServiceClient execution_client_;
+	ros::Publisher attached_object_publisher_;
 
 	boost::scoped_ptr<actionlib::SimpleActionClient<moveit_msgs::PickupAction> > pick_action_client_;
 	boost::scoped_ptr<actionlib::SimpleActionClient<moveit_msgs::PlaceAction> > place_action_client_;
+	boost::scoped_ptr<actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> > move_action_client_;
 
-	void donePickupCb(const actionlib::SimpleClientGoalState &state, const moveit_msgs::PickupActionResultConstPtr &result);
-	void donePickupCb(const actionlib::SimpleClientGoalState &state, const moveit_msgs::PlaceActionResultConstPtr &result);
-
-	moveit_msgs::PickupGoal constructPickupGoal(const std::string &object);
-	moveit_msgs::PlaceGoal constructPlaceGoal(const std::string &object);
-
-	template<typename T>
-	void waitForAction(const T &action, const ros::Duration &wait_for_server, const std::string &name) {
-
-		ROS_DEBUG("Waiting for MoveGroup action server (%s)...", name.c_str());
-
-		// in case ROS time is published, wait for the time data to arrive
-		ros::Time start_time = ros::Time::now();
-		while (start_time == ros::Time::now()) {
-			ros::WallDuration(0.01).sleep();
-			ros::spinOnce();
-		}
-
-		// wait for the server (and spin as needed)
-		if (wait_for_server == ros::Duration(0, 0)) {
-			while (node_handle_.ok() && !action->isServerConnected()) {
-				ros::WallDuration(0.02).sleep();
-				ros::spinOnce();
-			}
-		} else {
-			ros::Time final_time = ros::Time::now() + wait_for_server;
-			while (node_handle_.ok() && !action->isServerConnected()
-					&& final_time > ros::Time::now()) {
-				ros::WallDuration(0.02).sleep();
-				ros::spinOnce();
-			}
-		}
-
-		if (!action->isServerConnected())
-			throw std::runtime_error("Unable to connect to action server within allotted time");
-		else
-			ROS_DEBUG("Connected to '%s'", name.c_str());
-	}
-
-
+	robot_model::RobotModelConstPtr robot_model_;
+	const robot_model::JointModelGroup *joint_model_group_;
 };
 
 

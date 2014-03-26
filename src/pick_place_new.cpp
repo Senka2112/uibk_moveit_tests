@@ -54,7 +54,12 @@ public:
 
 		// Create MoveGroup for one of the planning groups
 		planning_scene_interface_.reset(new PlanningSceneInterface());
-		plan_execution_.reset(new PlanExecution("right"));
+		plan_execution_.reset(new PlanExecution("right_arm"));
+
+		plan_execution_->setAllowedPlanningTime(5);
+		plan_execution_->setPlanningAttempts(5);
+		plan_execution_->setPlanningGroupName("right_arm");
+		plan_execution_->setSupportSurfaceName(SUPPORT_SURFACE_NAME);
 
 		pub_attach_coll_obj_ = nh.advertise<AttachedCollisionObject>("attached_collision_object", 10);
 
@@ -86,22 +91,43 @@ public:
 			}
 		}
 
-//		ROS_INFO_STREAM_NAMED("simple_pick_place", "Waiting to put...");
-//		ros::Duration(0.5).sleep();
-//
-//		bool placed = false;
-//		while (!placed && ros::ok()) {
-//			if (!place(goal_pose_, OBJ_ID)) {
-//				ROS_ERROR_STREAM_NAMED("pick_place", "Place failed.");
-//			} else {
-//				ROS_INFO_STREAM_NAMED("pick_place", "Done with place");
-//				placed = true;
-//			}
-//		}
+		ROS_INFO_STREAM_NAMED("simple_pick_place", "Waiting to put...");
+		ros::Duration(5.5).sleep();
 
-		ROS_INFO_STREAM_NAMED("uibk_pick_place", "Pick and place cycle complete");
+		bool placed = false;
+		while (!placed && ros::ok()) {
+			if (!place(goal_pose_, OBJ_ID)) {
+				ROS_ERROR_STREAM_NAMED("pick_place", "Place failed.");
+			} else {
+				ROS_INFO_STREAM_NAMED("pick_place", "Done with place");
+				placed = true;
+			}
+		}
 
-		ros::Duration(2.0).sleep();
+		ROS_INFO_STREAM_NAMED("pick_place", "Pick and place cycle complete");
+
+		ros::Duration(2).sleep();
+
+		ROS_INFO_STREAM_NAMED("pick_place", "Returning to default position");
+
+		geometry_msgs::Pose pose;
+		pose.position.x = 0;
+		pose.position.y = 0;
+		pose.position.z = 0.5;
+		pose.orientation.x = 0;
+		pose.orientation.y = 0;
+		pose.orientation.z = 0;
+		pose.orientation.w = 1;
+
+		PlanningResultPtr plan = plan_execution_->plan(pose);
+		if(plan->status == PlanExecution::SUCCESS) {
+			ROS_INFO("Motion plan computed - executing trajectory...");
+			plan_execution_->execute(plan);
+		} else {
+			ROS_WARN("Planning was not successful!");
+		}
+
+		ROS_INFO("Finished");
 
 		return true;
 	}
@@ -294,7 +320,16 @@ public:
 		// Pick grasp
 		generateGrasps(start_pose_, grasps);
 
-		return plan_execution_->plan_pick(name, grasps);
+		PlanningResultPtr plan = plan_execution_->plan_pick(name, grasps);
+		if(plan->status == PlanExecution::SUCCESS) {
+			ROS_INFO("Planning pickup phase sucessfully completed!");
+		} else {
+			ROS_WARN("Planning pickup phase failed!");
+			return false;
+		}
+		ROS_INFO("Executing pickup...");
+
+		return plan_execution_->execute(plan);
 	}
 
 	bool place(const geometry_msgs::Pose& goal_pose, std::string name) {
@@ -371,7 +406,18 @@ public:
 		moveit_msgs::Constraints constraints;
 		constraints.orientation_constraints.push_back(oc);
 
-		return plan_execution_->plan_place(name, place_locations);
+		PlanningResultPtr plan = plan_execution_->plan_place(name, place_locations);
+
+		if(plan->status == PlanExecution::SUCCESS) {
+			ROS_INFO("Planning placement phase sucessfully completed!");
+		} else {
+			ROS_WARN("Planning placement phase failed!");
+			return false;
+		}
+
+		ROS_INFO("Executing placement...");
+
+		return plan_execution_->execute(plan);
 	}
 
 	bool generateGrasps(geometry_msgs::Pose &pose, vector<Grasp>& grasps) {
@@ -498,8 +544,7 @@ public:
 
 		return true;
 	}
-}
-;
+};
 
 }
 
