@@ -27,8 +27,8 @@
 #include <moveit/robot_state/robot_state.h>
 #include "moveit/robot_model/robot_model.h"
 
-#define IK_ATTEMPTS 3
-#define IK_TIMEOUT 0.05
+#define IK_ATTEMPTS 5
+#define IK_TIMEOUT 0.1
 
 using namespace std;
 using namespace ros;

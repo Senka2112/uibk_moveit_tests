@@ -112,12 +112,10 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         calib_right_arm_base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         left_arm_1_link:
           Alpha: 1
           Show Axes: false
@@ -197,7 +195,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         left_sdh_palm_link:
           Alpha: 1
           Show Axes: false
@@ -222,7 +219,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         leg_0_link:
           Alpha: 1
           Show Axes: false
@@ -322,7 +318,6 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         right_sdh_palm_link:
           Alpha: 1
           Show Axes: false
@@ -347,8 +342,12 @@ Visualization Manager:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
         table_plate_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        table_surface_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -376,13 +375,14 @@ Visualization Manager:
       Marker Topic: /visualize_ik_results
       Name: Marker
       Namespaces:
-        test_results: true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: /world_link
+    Fixed Frame: world_link
+    Frame Rate: 30
   Name: root
   Tools:
     - Class: rviz/Interact
@@ -402,17 +402,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/XYOrbit
-      Distance: 0.894265
+      Distance: 1.576
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
         X: 0.275401
         Y: 0.0592223
         Z: 1.19209e-07
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.250399
+      Pitch: 0.140399
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz)
-      Yaw: 5.53178
+      Yaw: 5.71177
     Saved: ~
 Window Geometry:
   Displays:
@@ -430,5 +435,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1301
-  X: 65
-  Y: 24
+  X: 84
+  Y: 63
