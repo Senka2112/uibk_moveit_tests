@@ -112,30 +112,30 @@ void createRandomOrientations(vector<Affine3d> &orientations, int n) {
 /**
  * Create a set of test poses
  */
-void createTestPoses(vector<Affine3d> &test_poses) {
+void createTestPoses(vector<Affine3d> &test_poses, double sz_x, double sz_y, double sz_z, double offset) {
 
-	Vector3d start_position(-0.15, -0.03, 0);
-	// torso center: x=-0.4723 y=0.6767
+//	Vector3d start_position(-0.15, -0.03, 0);
 
-//	Vector3d start_position(0, 0.2, 0.2);
+	// torso center
+	Vector3d start_position(-0.4723, 0.6767, 0.2);
 
 //	int ORIENTATION_CNT = 5;
 
 	double SIZE_X, SIZE_Y, SIZE_Z;
 
-	SIZE_X = 0.61;
-	SIZE_Y = 1.41;
-	SIZE_Z = 0.61;
+//	SIZE_X = 0.61;
+//	SIZE_Y = 1.41;
+//	SIZE_Z = 0.61;
 
 //	SIZE_X = 0.2;
 //	SIZE_Y = 0.2;
 //	SIZE_Z = 0.2;
 
-	double offset = 0.10;
+	double OFFSET = 0.05;
 
-	for (double x = 0; x <= SIZE_X; x += offset)
-		for (double y = 0; y <= SIZE_Y; y += offset)
-			for (double z = 0; z < SIZE_Z; z += offset) {
+	for (double x = 0; x <= sz_x; x += offset)
+		for (double y = -sz_y/2; y <= sz_y/2; y += offset)
+			for (double z = 0; z < sz_z; z += offset) {
 				Vector3d translation = Vector3d(x, y, z) + start_position;
 
 				vector<Affine3d> orientations;
@@ -173,9 +173,23 @@ void write_pose(ofstream &file, Affine3d &pose) {
 
 int main(int argc, char **argv) {
 	if (argc < 2) {
-		ROS_ERROR("Usage: %s OUTPUT_FILE_NAME]", argv[0]);
+		ROS_ERROR("Usage: %s OUTPUT_FILE_NAME [SIZEX SIZEY SIZEZ OFFSET]", argv[0]);
 		return EXIT_FAILURE;
 	}
+
+	double sz_x = 0.2;
+	double sz_y = 0.2;
+	double sz_z = 0.2;
+	double offset = 0.1;
+
+	if(argc > 5) {
+		sz_x = atof(argv[2]);
+		sz_y = atof(argv[3]);
+		sz_z = atof(argv[4]);
+		offset = atof(argv[5]);
+	}
+
+	ROS_INFO("Computing test poses for region [%1.2f, %1.2f, %1.2f] with offset %1.3f", sz_x, sz_y, sz_z, offset);
 
 	char *fn(argv[1]);
 	ofstream file(fn);
@@ -190,7 +204,7 @@ int main(int argc, char **argv) {
 
 	ROS_INFO("Calculating test poses...");
 	vector<Affine3d> poses;
-	createTestPoses(poses);
+	createTestPoses(poses, sz_x, sz_y, sz_z,offset);
 
 	ROS_INFO("%d test poses created.", (int)poses.size());
 	ROS_INFO("Writing poses into file..."
