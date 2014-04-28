@@ -3,6 +3,7 @@
 
 #include <io_helpers.h>
 #include <uibk_planning_node/TrajectoryPlanner.h>
+#include <uibk_planning_node/VisualizationTools.h>
 
 using namespace std;
 
@@ -67,6 +68,7 @@ private:
 	string arm_;
 	vector<PlannerTestCase> test_cases_;
 	trajectory_planner_moveit::TrajectoryPlanner planner_;
+	trajectory_planner_moveit::VisualizationTools visual_tools_;
 	sensor_msgs::JointState start_state_;
 
 	double planning_time_;
@@ -85,7 +87,7 @@ public:
 				  double allowed_planning_time = 5.0,
 				  int max_planning_attempts = 10,
 				  string planner_id = "")
-		: planner_(nh)
+		: planner_(nh), visual_tools_(nh)
 	{
 		arm_ = arm;
 		planning_time_ = allowed_planning_time;
@@ -137,6 +139,8 @@ public:
 					if(!alwaysUseStartState_) {
 						current_state = test_case.getGoalState();
 					}
+					// display trajectory
+					visual_tools_.publish_trajectory(test_case.getResult().trajectory_start, test_case.getResult().trajectory);
 					break;
 				} else {
 					ROS_ERROR("Failed!");
@@ -263,6 +267,8 @@ int main(int argc, char *argv[])
 	}
 
 	ros::init(argc, argv, "planning_tests");
+	ros::AsyncSpinner spinner(1);
+	spinner.start();
 	ros::NodeHandle nh;
 
 	PlannerTester tester(nh);
@@ -270,7 +276,7 @@ int main(int argc, char *argv[])
 	tester.setArm(arm);
 	tester.alwaysUseStartState(false);
 	tester.setRetries(2);
-	tester.setMaxTrajectoryPoints(2000);
+	tester.setMaxTrajectoryPoints(50);
 	tester.run();
 	tester.displayResults();
 

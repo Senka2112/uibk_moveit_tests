@@ -136,7 +136,7 @@ target_link_libraries(display_result_states ${catkin_LIBRARIES})
 
 add_executable(execute_planning_tests src/execute_planning_tests.cpp)
 add_dependencies(execute_planning_tests trajectory_planner)
-target_link_libraries(execute_planning_tests trajectory_planner ${catkin_LIBRARIES})
+target_link_libraries(execute_planning_tests trajectory_planner visualization_tools ${catkin_LIBRARIES})
 
 ## Declare a cpp executable
 # add_executable(uibk_moveit_tests_node src/uibk_moveit_tests_node.cpp)
