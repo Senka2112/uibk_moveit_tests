@@ -51,6 +51,8 @@ void visualize_results(string &name, map<string, int> &results) {
 	marker.scale.z = 0.01;
 
 	int i = 0;
+    int positive = 0;
+
 	map<string, int>::iterator it;
 	for(it = results.begin(); it != results.end(); ++it) {
 		stringstream ss(it->first);
@@ -88,6 +90,8 @@ void visualize_results(string &name, map<string, int> &results) {
 void read_results(ifstream &stream, map<string, int> &results) {
 	string line;
 	int max_result = 0;
+    int i = 0;
+    int positive = 0;
 
 	while(getline(stream, line)) {
 		double x,y,z, ox, oy, oz, ow;
@@ -103,11 +107,21 @@ void read_results(ifstream &stream, map<string, int> &results) {
 		key.precision(3);
 		key << x << " " << y << " " << z;
 
-		results[key.str()] += result;
+        if(result > 0) {
+            results[key.str()]++;
+            positive++;
+        }
+
 		if(results[key.str()] > max_result)
 			max_result = results[key.str()];
+
+        i++;
 	}
-	ROS_INFO("Maximum result: %d", max_result);
+
+    ROS_INFO("Result set contains %d test poses.", i);
+    ROS_INFO("%d positive IK solutions found", positive);
+    ROS_INFO("Maximum result: %d", max_result);
+
 }
 
 int main(int argc, char **argv) {

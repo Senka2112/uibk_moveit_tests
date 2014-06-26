@@ -85,7 +85,7 @@ void run_computation(const string &arm,
 int main(int argc, char **argv) {
 
 	if(argc < 4) {
-		ROS_ERROR("Usage: %s INPUT_FN OUTPUT_FN ARM [optional AVOID_COLLISIONS = TRUE]", argv[0]);
+		ROS_ERROR("Usage: %s INPUT_FN OUTPUT_FN ARM [optional (0 or 1 )AVOID_COLLISIONS = TRUE(1)]", argv[0]);
 		return EXIT_FAILURE;
 	}
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
 	bool avoid_collisions = true;
 
 	if(argc > 4) {
-		// try to read visualization paramter
+		// try to read avoid collisions paramter
 		stringstream ss(argv[4]);
 		ss >> avoid_collisions;
 	}
@@ -107,6 +107,7 @@ int main(int argc, char **argv) {
 	KinematicsHelper helper(nh);
 
 	ROS_INFO("Starting computation for input file '%s' on IK group '%s_arm'", input_fn, arm.c_str());
+	ROS_INFO("Avoid collisions is set to '%s'", avoid_collisions ? "true" : "false");
 
 	// read test poses from input file
 	vector<geometry_msgs::Pose> test_poses;

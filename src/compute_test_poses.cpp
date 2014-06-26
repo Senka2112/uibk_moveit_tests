@@ -117,11 +117,11 @@ void createTestPoses(vector<Affine3d> &test_poses, double sz_x, double sz_y, dou
 //	Vector3d start_position(-0.15, -0.03, 0);
 
 	// torso center
-	Vector3d start_position(-0.4723, 0.6767, 0.2);
+	Vector3d start_position(-0.4723, 0.6767, -0.2);
 
 //	int ORIENTATION_CNT = 5;
 
-	double SIZE_X, SIZE_Y, SIZE_Z;
+//	double SIZE_X, SIZE_Y, SIZE_Z;
 
 //	SIZE_X = 0.61;
 //	SIZE_Y = 1.41;
