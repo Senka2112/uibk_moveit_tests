@@ -1,7 +1,7 @@
 <launch>
 
-  <param name="robot_description" command="$(find xacro)/xacro.py $(find uibk_robot)/urdf/uibk_robot.urdf.xacro"/>
-  <param name="robot_description_semantic" textfile="$(find uibk_robot_moveit_config)/config/uibk_robot.srdf" />
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find iis_robot)/urdf/iis_robot_table.xacro"/>
+  <param name="robot_description_semantic" textfile="$(find uibk_robot_moveit_config)/config/iis_robot.srdf" />
   
   <rosparam command="load" file="$(find uibk_robot_moveit_config)/config/kinematics.yaml"/> 
   

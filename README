@@ -1,0 +1,30 @@
+uibk_moveit_tests
+=================
+
+This package contains various tools for testing the functionality of the MoveIt configuration.
+TODO: Extend package documentation!!!
+
+Visualize IK test results
+=========================
+
+Move into the 'results' folder of this project. It contains the generated files of the test run
+
+  roscd uibk_moveit_tests/results
+  
+Launch RViz as the results are displayed as markers
+
+  roslaunch uibk_moveit_tests ik_test.launch
+  
+Start the tool that evaluates the test result file and publishes the marker message to RViz
+
+  rosrun uibk_moveit_tests visualize_ik_resul results_left
+
+or
+
+  rosrun uibk_moveit_tests visualize_ik_resul results_right
+  
+Now you should be able to see the visualization in RViz. Black cubes mean the position was not reachable at all.
+The color range from red to green indicates, for how many orientations a valid IK solution could be found for each point.
+The file with the sample poses contains 3500 points with 17 poses per point but it can easily be extended.
+
+TODO: Explain the other tools within this package!!!
