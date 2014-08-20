@@ -1,0 +1,4 @@
+Use those scripts to bring the necessary objects into the simulation scene.
+
+pub_surface.sh just inserts the table surface
+pub_scene.sh   inserts all required objects to execute the sample pick and place task (surface, obstacle, cylinder)

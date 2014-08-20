@@ -143,3 +143,8 @@ target_link_libraries(test_path_trajectory_planner path_trajectory_planner traje
 add_executable(sample_pick_place src/sample_pick_place.cpp)
 add_dependencies(sample_pick_place planning_helper)
 target_link_libraries(sample_pick_place planning_helper ${catkin_LIBRARIES})
+
+# Alex's stuff
+add_executable(simple_ik_trajectory_planner src/simple_ik_trajectory_planner.cpp)
+add_dependencies(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner)
+target_link_libraries(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner ${catkin_LIBRARIES})

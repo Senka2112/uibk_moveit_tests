@@ -53,8 +53,9 @@ public:
 
 	PickPlace(ros::NodeHandle &nh, const string &planner_id) {
 
-		// Create MoveGroup for one of the planning groups
+		
 		planning_scene_interface_.reset(new PlanningSceneInterface());
+		// Create PlanningHelper for one of the planning groups
         planning_helper_.reset(new PlanningHelper("right_arm"));
 
         planning_helper_->setAllowedPlanningTime(5);
@@ -109,24 +110,24 @@ public:
 
 		ros::Duration(2).sleep();
 
-		ROS_INFO_STREAM_NAMED("pick_place", "Returning to default position");
+//		ROS_INFO_STREAM_NAMED("pick_place", "Returning to default position");
 
-		geometry_msgs::Pose pose;
-		pose.position.x = 0;
-		pose.position.y = 0;
-		pose.position.z = 0.5;
-		pose.orientation.x = 0;
-		pose.orientation.y = 0;
-		pose.orientation.z = 0;
-		pose.orientation.w = 1;
+//		geometry_msgs::Pose pose;
+//		pose.position.x = 0;
+//		pose.position.y = 0;
+//		pose.position.z = 0.5;
+//		pose.orientation.x = 0;
+//		pose.orientation.y = 0;
+//		pose.orientation.z = 0;
+//		pose.orientation.w = 1;
 
-        PlanningResultPtr plan = planning_helper_->plan(pose);
-        if(plan->status == PlanningHelper::SUCCESS) {
-			ROS_INFO("Motion plan computed - executing trajectory...");
-            planning_helper_->execute(plan);
-		} else {
-			ROS_WARN("Planning was not successful!");
-		}
+//        PlanningResultPtr plan = planning_helper_->plan(pose);
+//        if(plan->status == PlanningHelper::SUCCESS) {
+//			ROS_INFO("Motion plan computed - executing trajectory...");
+//            planning_helper_->execute(plan);
+//		} else {
+//			ROS_WARN("Planning was not successful!");
+//		}
 
 		ROS_INFO("Finished");
 
@@ -160,8 +161,8 @@ public:
 		/* A pose for the box (specified relative to frame_id) */
 		geometry_msgs::Pose box_pose;
 		box_pose.orientation.w = 1.0;
-		box_pose.position.x = 0.25;
-		box_pose.position.y = 0.25;
+        box_pose.position.x = 0.15; //0.25
+        box_pose.position.y = 0.10;  //0.25
 		box_pose.position.z = 0.1 + SUPPORT_SURFACE_HEIGHT;
 
 		obstacle.primitives.push_back(box);
@@ -204,8 +205,8 @@ public:
 		geometry_msgs::Pose start_pose;
 
 		// Position
-		start_pose.position.x = 0.0;
-		start_pose.position.y = 0.0;
+        start_pose.position.x = 0.1; // 0.0
+        start_pose.position.y = -0.2; // 0.0
 		start_pose.position.z = CYLINDER_HEIGHT / 2 + SUPPORT_SURFACE_HEIGHT;
 
 		// Orientation
@@ -221,8 +222,8 @@ public:
 		geometry_msgs::Pose goal_pose;
 
 		// Position
-		goal_pose.position.x = 0.0;
-		goal_pose.position.y = -0.2;
+        goal_pose.position.x = 0.3;// 0.1
+        goal_pose.position.y = 0.6;//-0.2
 		goal_pose.position.z = CYLINDER_HEIGHT / 2 + SUPPORT_SURFACE_HEIGHT;
 
 		// Orientation
@@ -313,7 +314,7 @@ public:
 		pub_attach_coll_obj_.publish(aco);
 	}
 
-	bool pick(geometry_msgs::Pose& start_pose_, std::string name) {
+    bool pick(geometry_msgs::Pose& start_pose_, const string &name) {
 		ROS_WARN_STREAM_NAMED("", "picking object "<< name);
 
 		std::vector<Grasp> grasps;
@@ -328,9 +329,17 @@ public:
 			ROS_WARN("Planning pickup phase failed!");
 			return false;
 		}
-		ROS_INFO("Executing pickup...");
 
-        return planning_helper_->execute(plan);
+        cout << ("Should the planned trajectory be executed (y/n)? ");
+        string input;
+        cin >> input;
+        if(input == "y") {
+            ROS_INFO("Executing pickup...");
+            return planning_helper_->execute(plan);
+        } else {
+            ROS_WARN("Execution stopped by user!");
+            return false;
+        }
 	}
 
 	bool place(const geometry_msgs::Pose& goal_pose, std::string name) {
@@ -346,7 +355,7 @@ public:
 		// pose_stamped.header.stamp = ros::Time::now();
 
 		// Create 360 degrees of place location rotated around a center
-		for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 4) {
+        for (double angle = 0; angle < 2 * M_PI; angle += M_PI / 20) {
 			pose_stamped.pose = goal_pose;
 
 			// Orientation
@@ -366,10 +375,10 @@ public:
 			// gripper_approach.direction.header.stamp = ros::Time::now();
 			gripper_approach.desired_distance = 0.2; // The distance the origin of a robot link needs to travel
 			gripper_approach.min_distance = 0.1;
-			gripper_approach.direction.header.frame_id = EE_PARENT_LINK;
-			gripper_approach.direction.vector.x = 1;
+            gripper_approach.direction.header.frame_id = BASE_LINK;
+            gripper_approach.direction.vector.x = 0;
 			gripper_approach.direction.vector.y = 0;
-			gripper_approach.direction.vector.z = 0;
+            gripper_approach.direction.vector.z = -1;
 			place_loc.pre_place_approach = gripper_approach;
 
 			// Retreat
@@ -389,23 +398,23 @@ public:
 			place_locations.push_back(place_loc);
 		}
 
-		moveit_msgs::OrientationConstraint oc;
-		oc.header.frame_id = BASE_LINK;
-		oc.link_name = EE_PARENT_LINK;
+//		moveit_msgs::OrientationConstraint oc;
+//		oc.header.frame_id = BASE_LINK;
+//		oc.link_name = EE_PARENT_LINK;
 
-		oc.orientation.x = 0;
-		oc.orientation.y = 0;
-		oc.orientation.z = 0;
-		oc.orientation.w = 1;
+//		oc.orientation.x = 0;
+//		oc.orientation.y = 0;
+//		oc.orientation.z = 0;
+//		oc.orientation.w = 1;
 
-		oc.absolute_x_axis_tolerance = 0.3;
-		oc.absolute_y_axis_tolerance = 0.3;
-		oc.absolute_z_axis_tolerance = 0.3;
+//		oc.absolute_x_axis_tolerance = 0.3;
+//		oc.absolute_y_axis_tolerance = 0.3;
+//		oc.absolute_z_axis_tolerance = 0.3;
 
-		oc.weight = 1;
+//		oc.weight = 1;
 
-		moveit_msgs::Constraints constraints;
-		constraints.orientation_constraints.push_back(oc);
+//		moveit_msgs::Constraints constraints;
+//		constraints.orientation_constraints.push_back(oc);
 
         PlanningResultPtr plan = planning_helper_->plan_place(name, place_locations);
 
@@ -416,9 +425,16 @@ public:
 			return false;
 		}
 
-		ROS_INFO("Executing placement...");
-
-        return planning_helper_->execute(plan);
+        cout << ("Should the planned trajectory be executed (y/n)? ");
+        string input;
+        cin >> input;
+        if(input == "y") {
+            ROS_INFO("Executing placement...");
+            return planning_helper_->execute(plan);
+        } else {
+            ROS_WARN("Execution stopped by user!");
+            return false;
+        }
 	}
 
 	bool generateGrasps(geometry_msgs::Pose &pose, vector<Grasp>& grasps) {
@@ -531,10 +547,10 @@ public:
 			new_grasp.pre_grasp_approach = gripper_approach;
 
 			// Retreat
-			gripper_retreat.direction.header.frame_id = EE_PARENT_LINK;
-			gripper_retreat.direction.vector.x = -1;
+			gripper_retreat.direction.header.frame_id = BASE_LINK;
+			gripper_retreat.direction.vector.x = 0;
 			gripper_retreat.direction.vector.y = 0;
-			gripper_retreat.direction.vector.z = 0;
+			gripper_retreat.direction.vector.z = 1;
 			new_grasp.post_grasp_retreat = gripper_retreat;
 
 			// Add to vector
