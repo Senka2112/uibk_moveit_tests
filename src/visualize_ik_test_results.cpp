@@ -43,15 +43,15 @@ void visualize_results(string &name, map<string, int> &results) {
 	marker.ns = name;
 	marker.type = visualization_msgs::Marker::CUBE_LIST;
 	marker.action = visualization_msgs::Marker::ADD;
-	marker.points.resize(results.size());
-	marker.colors.resize(results.size());
+    marker.points.resize(results.size());
+    marker.colors.resize(results.size());
 
 	marker.scale.x = 0.01;
 	marker.scale.y = 0.01;
 	marker.scale.z = 0.01;
 
 	int i = 0;
-    int positive = 0;
+//    int positive = 0;
 
 	map<string, int>::iterator it;
 	for(it = results.begin(); it != results.end(); ++it) {
@@ -67,8 +67,11 @@ void visualize_results(string &name, map<string, int> &results) {
 		if(result > 0) {
 			marker.colors[i].g = (1.0/ORIENT_CNT)*result;
 			marker.colors[i].r = 1.0 - marker.colors[i].g;
-		}
-		marker.colors[i].a = 1;
+            marker.colors[i].a = 1;
+        } else {
+            marker.colors[i].a = 0;
+        }
+
 		i++;
 	}
 
