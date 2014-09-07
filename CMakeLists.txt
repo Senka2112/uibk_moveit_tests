@@ -133,8 +133,8 @@ add_executable(display_result_states src/display_result_states.cpp)
 target_link_libraries(display_result_states ${catkin_LIBRARIES})
 
 add_executable(execute_planning_tests src/execute_planning_tests.cpp)
-add_dependencies(execute_planning_tests trajectory_planner trajectory_planner_tester)
-target_link_libraries(execute_planning_tests trajectory_planner trajectory_planner_tester ${catkin_LIBRARIES})
+add_dependencies(execute_planning_tests trajectory_planner_impr trajectory_planner_tester)
+target_link_libraries(execute_planning_tests trajectory_planner_impr trajectory_planner_tester ${catkin_LIBRARIES})
 
 add_executable(test_path_trajectory_planner src/test_path_trajectory_planner.cpp)
 add_dependencies(test_path_trajectory_planner path_trajectory_planner trajectory_planner_tester)
@@ -145,6 +145,6 @@ add_dependencies(sample_pick_place planning_helper)
 target_link_libraries(sample_pick_place planning_helper ${catkin_LIBRARIES})
 
 # Alex's stuff
-add_executable(simple_ik_trajectory_planner src/simple_ik_trajectory_planner.cpp)
-add_dependencies(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner)
-target_link_libraries(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner ${catkin_LIBRARIES})
+# add_executable(simple_ik_trajectory_planner src/simple_ik_trajectory_planner.cpp)
+# add_dependencies(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner)
+# target_link_libraries(simple_ik_trajectory_planner planning_helper kinematics_helper trajectory_planner ${catkin_LIBRARIES})

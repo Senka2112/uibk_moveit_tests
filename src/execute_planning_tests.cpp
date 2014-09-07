@@ -52,9 +52,9 @@ int main(int argc, char *argv[])
     }
 
     trajectory_planner_moveit::TrajectoryPlanner planner(nh);
-    planner.setMaxTrajectoryPoints(100);
+    planner.setMaxTrajectoryPoints(60);
     planner.setPlanningAttempts(10);
-    planner.setAllowedPlanningTime(20);
+    planner.setAllowedPlanningTime(5);
 
     TrajectoryPlannerTester tester(nh);
 	tester.useTestSet(test_set);
